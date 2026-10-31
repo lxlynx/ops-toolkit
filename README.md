@@ -1,57 +1,52 @@
+<div align="center">
+
 # ops-toolkit
 
-Three scripts I had rewritten from memory on enough machines to justify keeping them
-somewhere. Nothing here needs a package manager: bash, coreutils, git and Python 3.8 are
-the entire dependency list, because these are the tools you want on the box that is
-already having a bad day.
+**Three scripts I had rewritten from memory on enough machines to justify keeping them somewhere.**
 
-| Script | What it does |
+[![shell](https://img.shields.io/badge/shell-bash-black?style=flat-square&logo=gnubash)](#quick-start)
+[![deps](https://img.shields.io/badge/dependencies-bash%20%7C%20coreutils%20%7C%20git%20%7C%20python3-lightgrey?style=flat-square)](#quick-start)
+[![license](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+
+</div>
+
+## About
+
+These are the tools you want already present on a host you have just SSH'd
+into for the first time, which is why the dependency list stops at bash,
+coreutils, git, and the system Python. Each script is self-contained: no shared
+library, no install step, so copying one file to a host is a complete
+deployment.
+
+## Quick start
+
+```bash
+git clone https://github.com/lxlynx/ops-toolkit
+cd ops-toolkit
+ls bin/
+# each script has its own -h; nothing is installed globally
+```
+
+## Configuration
+
+| Key | Description |
 | --- | --- |
-| `rotate-logs.sh` | Size-based log rotation where logrotate isn't installed or isn't allowed |
-| `repo-health.py` | Reports which git repos on a machine hold work that exists nowhere else |
-| `json-reconcile.py` | Diffs two JSON exports on a key field and exits nonzero if they disagree |
+| `bin/` | the scripts themselves, each runnable standalone |
+| `python 3.8+` | the only interpreter dependency, already on most hosts |
+| `bash / coreutils / git` | everything else — no package manager needed |
+## Roadmap
 
-## Install
+- [ ] `install` subcommand that symlinks into `~/.local/bin`
+- [ ] shellcheck in CI
+- [ ] Per-script man pages
 
-```bash
-git clone https://github.com/lxlynx/ops-toolkit.git
-chmod +x ops-toolkit/*.sh ops-toolkit/*.py
-```
+## Contributing
 
-## rotate-logs.sh
+Issues and pull requests are welcome. Please keep changes small and focused,
+and add a test for any behaviour change — every repository here ships with a
+runnable test suite and no third-party dependencies, so CI is just
+`python3 -m unittest` / `bash test_*.sh`.
 
-```bash
-./rotate-logs.sh --keep 3 --size 5120 --dry-run /var/log/myapp
-```
+## License
 
-Keeps `app.log.1.gz` through `app.log.N.gz`, then truncates the original in place rather
-than renaming it. That detail matters: a process holding an open file descriptor keeps
-writing to the same inode, so nothing needs a restart or a SIGHUP to find its log again.
-Always run it once with `--dry-run`.
-
-## repo-health.py
-
-```bash
-./repo-health.py ~/src --depth 3 --problems
-./repo-health.py ~/src --json | jq '.[] | select(.ahead > 0) | .path'
-```
-
-Walks a directory for git repos and prints branch, age of the last commit, and anything
-worth knowing before you wipe the disk: uncommitted changes, unpushed commits, stashes,
-missing remote. `--problems` hides the repos that are fine.
-
-## json-reconcile.py
-
-```bash
-./json-reconcile.py invoices.json ledger.json --key invoice_id \
-  --fields amount,currency,status --tolerance 0.01
-```
-
-Joins two exports on a key and reports what is only on one side plus any field-level
-disagreements. `--tolerance` exists because floating point money from two systems is
-rarely bit-identical. Exit status is 1 when the sides disagree, which makes it usable as
-a cron or CI check without parsing the output.
-
-## Licence
-
-MIT, see [LICENSE](LICENSE).
+[MIT](LICENSE)
